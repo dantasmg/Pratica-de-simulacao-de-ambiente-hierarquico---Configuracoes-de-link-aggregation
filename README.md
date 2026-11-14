@@ -5,10 +5,14 @@
 **Disciplina:** Comutação de Redes Locais (TCN.0639)  
 **Docente:** Prof. Jhordano Malacarne Bravim  
 **Autor(a):** Mariane Gonçalves Dantas
+
 **Ferramenta:** Cisco Packet Tracer
 
 ## 1. Objetivo da Atividade
 Configurar canais de agregação de links (**Link Aggregation / EtherChannel**) via protocolo **LACP (IEEE 802.3ad)** entre os switches de Distribuição e Núcleo (2 links agregados) e entre os dois switches de Núcleo (4 links agregados), configurando as interfaces lógicas (`Port-channels`) em modo `trunk` e validando a comunicação de ponta a ponta entre ramos opostos da topologia hierárquica.
+
+<img width="847" height="626" alt="Print Packet Tracer" src="https://github.com/user-attachments/assets/e94d25a0-3947-4977-8bc2-9c025477295a" />
+
 
 ## 2. Pesquisa e Fundamentação sobre Agregação de Links (IEEE 802.3ad / LACP e PAgP)
 
@@ -19,7 +23,8 @@ Configurar canais de agregação de links (**Link Aggregation / EtherChannel**) 
 ### Análise do STP nos Enlaces Paralelos (`NUCLEO01` / `Switch0`)
 A execução do comando `show spanning-tree vlan 10` demonstra como o STP trata enlaces paralelos individuais (`Fa2/1` em `Root FWD` e `Fa3/1`, `Fa4/1` e `Fa5/1` bloqueadas em `Altn BLK` para evitar loop):
 
-[CLI%20switch.png]
+<img width="700" height="708" alt="CLI switch" src="https://github.com/user-attachments/assets/595f6dda-c7cf-4fe8-a7bb-7350b6c7bf00" />
+
 
 ## 3. Documentação Técnica e Mapeamento dos Port-channels
 
@@ -99,35 +104,38 @@ copy running-config startup-config
 
 * **No `DIST02` (`Switch3`):** O comando `show etherchannel summary` comprova que o grupo **`Po5(SU)`** está ativo em Camada 2 (`S = Layer2`, `U = in use`) via protocolo **LACP**, com as interfaces **`Fa4/1(P)` e `Fa5/1(P)`** associadas ao bundle:
 
-[CLI%20switch%20III.png]
+<img width="702" height="711" alt="CLI switch III" src="https://github.com/user-attachments/assets/7d95b909-78ac-4b54-b362-c62a1d66a180" />
 
 * **No `DIST01` (`Switch2`):** O comando `show interfaces trunk` comprova que a interface lógica **`Po2`** e os troncos de acesso (`Fa0/1` e `Fa1/1`) encaminham normalmente as **VLANs 10 e 20**:
 
-[CLI%20switch%20II.png]
+<img width="700" height="709" alt="CLI switch II" src="https://github.com/user-attachments/assets/f4c8d4d6-c4a9-47b5-82d4-ab24bc119aaf" />
 
 ## 6. Testes Finais de Conectividade de Ponta a Ponta
 
 ### 6.1 Rastreamento de Rota (`tracert`) de `PC0` (`Switch4`) até `PC3` (`Switch7`)
 O comando `tracert 192.168.10.14` disparado do `PC0` (`192.168.10.11`, VLAN 10 na borda esquerda) alcança o `PC3` (`192.168.10.14`, VLAN 10 na borda direita) em **1 salto (`1 ms / 0 ms / 0 ms`)**, pois todos os switches do caminho atuam em **Camada 2** e encaminham o quadro sem alterar o TTL do pacote IP:
 
-[prompt%20de%20comando%20PC0.png]
+<img width="699" height="284" alt="prompt de comando PC0" src="https://github.com/user-attachments/assets/74e701b9-a2f8-4d43-990a-f144796e8c5e" />
+
 
 ### 6.2 Rastreamento Visual Passo a Passo Cruzando Toda a Rede (Modo Simulation)
 
 1. **Etapa 1 (`PC0` $\rightarrow$ `Switch4`):** O pacote ICMP sai do `PC0` e chega ao switch de borda esquerdo (`Switch4`).
-[Simula%C3%A7%C3%A3o%20I.png]
+<img width="870" height="587" alt="Simulação I" src="https://github.com/user-attachments/assets/52fa353d-ed09-4728-8c22-40effa607eab" />
 
 2. **Etapa 2 (`Switch4` $\rightarrow$ `Switch2 / DIST01`):** O quadro sobe etiquetado na VLAN 10 (802.1Q) para o switch de distribuição esquerdo (`Switch2`).
-[Simula%C3%A7%C3%A3o%20II.png]
+<img width="914" height="595" alt="Simulação II" src="https://github.com/user-attachments/assets/cb1e8441-436a-43e1-9edd-d34b46aa25f5" />
 
 3. **Etapa 3 (`Switch2 / DIST01` $\rightarrow$ `Switch0 / NUCLEO01`):** O quadro sobe pelo canal agregado `Po2` até o núcleo esquerdo (`Switch0`).
-[Simula%C3%A7%C3%A3o%20III.png]
+<img width="874" height="595" alt="Simulação III" src="https://github.com/user-attachments/assets/701746f3-5ad0-4256-b8dd-8046cd01b5e3" />
 
 4. **Etapa 4 (`Switch0 / NUCLEO01` $\rightarrow$ `Switch1 / NUCLEO02`):** O quadro atravessa a ligação entre os dois switches de núcleo até chegar ao `Switch1` (`NUCLEO02`).
-[Simula%C3%A7%C3%A3o%20V.png]
+<img width="832" height="584" alt="Simulação V" src="https://github.com/user-attachments/assets/8f097a2c-6b90-4da4-ab49-1f6908344819" />
 
 5. **Etapa 5 (`Switch1 / NUCLEO02` $\rightarrow$ `Switch3 / DIST02` $\rightarrow$ `Switch7`):** O quadro desce pelo canal agregado `Po5` na distribuição direita (`Switch3`) e alcança o switch de borda direito (`Switch7`).
-[Simula%C3%A7%C3%A3o%20IV.png]
+<img width="813" height="574" alt="Simulação IV" src="https://github.com/user-attachments/assets/d850119d-aa36-47a0-9e08-de0e873164ea" />
 
 6. **Etapa 6 (`Switch7` $\rightarrow$ `PC3`):** O `Switch7` retira a tag 802.1Q e entrega o pacote na porta de acesso da VLAN 10 ao destino final (`PC3`).
-[Simula%C3%A7%C3%A3o%20VI.png]
+<img width="924" height="579" alt="Simulação VI" src="https://github.com/user-attachments/assets/3b560601-6d45-4ff9-bc23-4b5b5a399f2e" />
+
+
